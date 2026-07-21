@@ -386,6 +386,7 @@
         <div class="review-progress" id="reviewProgress"></div>
         <div class="review-card" id="reviewCard" onclick="revealAnswer()">
             <div class="spanish" id="reviewSpanish"></div>
+            <button onclick="event.stopPropagation(); speak(reviewWords[reviewIndex].spanish)" style="background:none;border:none;cursor:pointer;font-size:1.5em;margin-top:8px;" title="朗读">🔊</button>
             <div class="answer" id="reviewAnswer"></div>
             <div class="example" id="reviewExample"></div>
         </div>
@@ -480,7 +481,7 @@ async function loadWords() {
 
     container.innerHTML = data.words.map(w => `
         <div class="word-card" id="card-${w.id}">
-            <div class="spanish">${escHtml(w.spanish)}</div>
+            <div class="spanish">${escHtml(w.spanish)} <button onclick="speak('${w.spanish.replace(/'/g, "\\'")}')" style="background:none;border:none;cursor:pointer;font-size:1em;" title="朗读">🔊</button></div>
             <div class="chinese">${escHtml(w.chinese)}</div>
             ${w.example ? `<div class="example">"${escHtml(w.example)}"</div>` : ''}
             <div class="meta">
@@ -661,6 +662,30 @@ function escHtml(str) {
     return div.innerHTML;
 }
 
+// --- Text-to-Speech ---
+function speak(text) {
+    if (!('speechSynthesis' in window)) {
+        showToast('你的浏览器不支持语音功能');
+        return;
+    }
+    // Stop any current speech
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'es-ES';
+    utterance.rate = 0.85;
+    // Try to find a Spanish voice
+    const voices = speechSynthesis.getVoices();
+    const spanishVoice = voices.find(v => v.lang.startsWith('es'));
+    if (spanishVoice) utterance.voice = spanishVoice;
+    speechSynthesis.speak(utterance);
+}
+
+// Preload voices (some browsers load them async)
+if ('speechSynthesis' in window) {
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+}
+
 // --- Keyboard shortcut ---
 document.addEventListener('keydown', e => {
     if (e.key === 'Enter' && e.ctrlKey) {
@@ -691,7 +716,7 @@ async function lookupWord() {
 
         container.innerHTML = `
             <div class="dict-result">
-                <div class="dict-word">${escHtml(data.word)}</div>
+                <div class="dict-word">${escHtml(data.word)} <button onclick="speak('${data.word.replace(/'/g, "\\'")}')" style="background:none;border:none;cursor:pointer;font-size:0.8em;" title="朗读">🔊</button></div>
                 <div class="dict-section">
                     <div class="lang-label">🇨🇳 中文</div>
                     <div class="main-translation">${escHtml(zh.translation)}</div>

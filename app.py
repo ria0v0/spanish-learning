@@ -4,6 +4,7 @@ Spanish Learning App - 西语学习积累 📖
 
 import os
 import sqlite3
+import unicodedata
 import urllib.request
 import urllib.parse
 import json
@@ -52,7 +53,7 @@ def index():
 
 @app.route("/api/words", methods=["GET"])
 def get_words():
-    """获取词汇列表，支持搜索和标签筛选"""
+    """获取词汇列表，支持搜索和标签筛选（支持模糊匹配特殊字符如 ñ）"""
     search = request.args.get("search", "").strip()
     tag = request.args.get("tag", "").strip()
     page = int(request.args.get("page", 1))
@@ -60,13 +61,26 @@ def get_words():
     offset = (page - 1) * per_page
 
     conn = get_db()
+
+    # Register a custom function for accent-insensitive search
+    def normalize_text(text):
+        if text is None:
+            return ""
+        # Remove diacritics: ñ->n, á->a, etc.
+        nfkd = unicodedata.normalize('NFKD', text)
+        return ''.join(c for c in nfkd if not unicodedata.combining(c)).lower()
+
+    conn.create_function("normalize", 1, normalize_text)
+
     query = "SELECT * FROM words WHERE 1=1"
     params = []
 
     if search:
-        query += " AND (spanish LIKE ? OR chinese LIKE ? OR example LIKE ?)"
+        # Search both original and normalized versions
+        query += " AND (spanish LIKE ? OR chinese LIKE ? OR example LIKE ? OR normalize(spanish) LIKE ? OR normalize(chinese) LIKE ?)"
         like = f"%{search}%"
-        params.extend([like, like, like])
+        normalized_search = f"%{normalize_text(search)}%"
+        params.extend([like, like, like, normalized_search, normalized_search])
     if tag:
         query += " AND tag = ?"
         params.append(tag)
