@@ -270,6 +270,10 @@ def text_to_speech():
     if not text:
         return jsonify({"success": False, "error": "缺少文本"}), 400
 
+    # Limit text length for safety
+    if len(text) > 200:
+        text = text[:200]
+
     try:
         from gtts import gTTS
         tts = gTTS(text=text, lang='es', slow=False)
@@ -277,8 +281,10 @@ def text_to_speech():
         tts.write_to_fp(audio_buffer)
         audio_buffer.seek(0)
         return send_file(audio_buffer, mimetype='audio/mpeg', download_name='speech.mp3')
+    except ImportError:
+        return jsonify({"success": False, "error": "gTTS 未安装，请在服务器运行: pip install gtts"}), 500
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": f"TTS 错误: {str(e)}"}), 500
 
 
 # --- Stats ---

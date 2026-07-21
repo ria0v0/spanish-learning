@@ -666,8 +666,16 @@ function escHtml(str) {
 function speak(text) {
     if (!text) return;
     const url = `/api/tts?text=${encodeURIComponent(text)}`;
-    const audio = new Audio(url);
-    audio.play().catch(() => showToast('语音播放失败'));
+    fetch(url).then(res => {
+        if (!res.ok) {
+            return res.json().then(data => { showToast(data.error || '语音失败'); });
+        }
+        return res.blob().then(blob => {
+            const audioUrl = URL.createObjectURL(blob);
+            const audio = new Audio(audioUrl);
+            audio.play().catch(e => showToast('播放失败: ' + e.message));
+        });
+    }).catch(e => showToast('请求失败: ' + e.message));
 }
 
 // --- Keyboard shortcut ---
