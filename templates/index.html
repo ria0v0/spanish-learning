@@ -271,6 +271,47 @@
         /* Loading */
         .loading { text-align: center; padding: 20px; color: var(--text-light); }
 
+        /* Dictionary */
+        .dict-result {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        .dict-result .dict-word {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+        .dict-section {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .dict-section:last-child { border-bottom: none; }
+        .dict-section .lang-label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .dict-section .main-translation {
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        .dict-section .alternatives {
+            font-size: 0.85em;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+        .dict-add-btn {
+            margin-top: 12px;
+            width: 100%;
+        }
+
         @media (min-width: 600px) {
             .panel { max-width: 600px; margin: 0 auto; }
             .header { text-align: center; }
@@ -286,6 +327,7 @@
 
 <div class="tabs">
     <button class="tab active" onclick="switchTab('add')">➕ 添加</button>
+    <button class="tab" onclick="switchTab('dict')">📖 词典</button>
     <button class="tab" onclick="switchTab('list')">📚 词库</button>
     <button class="tab" onclick="switchTab('review')">🎯 复习</button>
 </div>
@@ -310,6 +352,15 @@
         <datalist id="tagSuggestions"></datalist>
     </div>
     <button class="btn btn-primary" onclick="addWord()">添加 ✓</button>
+</div>
+
+<!-- Dictionary Panel -->
+<div class="panel" id="panel-dict">
+    <div class="search-bar">
+        <input type="text" id="dictInput" placeholder="输入西语单词或短语..." onkeydown="if(event.key==='Enter')lookupWord()">
+        <button class="btn btn-primary btn-sm" onclick="lookupWord()" style="white-space:nowrap;">查询</button>
+    </div>
+    <div id="dictResult"></div>
 </div>
 
 <!-- List Panel -->
@@ -366,6 +417,7 @@ function switchTab(tab) {
     if (tab === 'list') loadWords();
     if (tab === 'review') loadReviewTags();
     if (tab === 'add') loadTagSuggestions();
+    if (tab === 'dict') document.getElementById('dictInput').focus();
 }
 
 // --- Toast ---
@@ -616,6 +668,56 @@ document.addEventListener('keydown', e => {
         if (addPanel.classList.contains('active')) addWord();
     }
 });
+
+// --- Dictionary ---
+async function lookupWord() {
+    const word = document.getElementById('dictInput').value.trim();
+    if (!word) { showToast('请输入要查询的词'); return; }
+
+    const container = document.getElementById('dictResult');
+    container.innerHTML = '<div class="loading">查询中...</div>';
+
+    try {
+        const res = await fetch(`/api/dictionary/lookup?word=${encodeURIComponent(word)}`);
+        const data = await res.json();
+
+        if (!data.success) {
+            container.innerHTML = `<div class="empty">${data.error}</div>`;
+            return;
+        }
+
+        const zh = data.chinese;
+        const en = data.english;
+
+        container.innerHTML = `
+            <div class="dict-result">
+                <div class="dict-word">${escHtml(data.word)}</div>
+                <div class="dict-section">
+                    <div class="lang-label">🇨🇳 中文</div>
+                    <div class="main-translation">${escHtml(zh.translation)}</div>
+                    ${zh.alternatives.length ? `<div class="alternatives">其他: ${zh.alternatives.map(a => escHtml(a)).join(' / ')}</div>` : ''}
+                </div>
+                <div class="dict-section">
+                    <div class="lang-label">🇬🇧 English</div>
+                    <div class="main-translation">${escHtml(en.translation)}</div>
+                    ${en.alternatives.length ? `<div class="alternatives">Also: ${en.alternatives.map(a => escHtml(a)).join(' / ')}</div>` : ''}
+                </div>
+                <button class="btn btn-success dict-add-btn" onclick="addFromDict('${escHtml(data.word)}', '${escHtml(zh.translation)}')">
+                    ➕ 加入词库
+                </button>
+            </div>
+        `;
+    } catch (e) {
+        container.innerHTML = '<div class="empty">查询失败，请稍后重试</div>';
+    }
+}
+
+function addFromDict(spanish, chinese) {
+    document.getElementById('inputSpanish').value = spanish;
+    document.getElementById('inputChinese').value = chinese;
+    switchTab('add');
+    showToast('已填入，可补充例句和标签后添加');
+}
 
 // --- Init ---
 loadStats();

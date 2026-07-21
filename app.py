@@ -4,6 +4,9 @@ Spanish Learning App - 西语学习积累 📖
 
 import os
 import sqlite3
+import urllib.request
+import urllib.parse
+import json
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 
@@ -195,6 +198,52 @@ def get_tags():
     ).fetchall()
     conn.close()
     return jsonify({"success": True, "tags": [dict(t) for t in tags]})
+
+
+# --- Dictionary Lookup ---
+
+def _translate(word, lang_pair):
+    """Call MyMemory API for translation"""
+    try:
+        encoded = urllib.parse.quote(word)
+        url = f"https://api.mymemory.translated.net/get?q={encoded}&langpair={lang_pair}"
+        req = urllib.request.Request(url, headers={"User-Agent": "SpanishLearningApp/1.0"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            if data.get("responseStatus") == 200:
+                main_translation = data["responseData"]["translatedText"]
+                # Get alternative translations from matches
+                alternatives = []
+                for match in data.get("matches", []):
+                    t = match.get("translation", "")
+                    if t and t != main_translation and t not in alternatives:
+                        alternatives.append(t)
+                    if len(alternatives) >= 3:
+                        break
+                return {"translation": main_translation, "alternatives": alternatives}
+    except Exception:
+        pass
+    return None
+
+
+@app.route("/api/dictionary/lookup", methods=["GET"])
+def dictionary_lookup():
+    """查词典：西语 → 中文 + 英文"""
+    word = request.args.get("word", "").strip()
+    if not word:
+        return jsonify({"success": False, "error": "请输入要查询的词"})
+
+    # Spanish → Chinese
+    zh_result = _translate(word, "es|zh")
+    # Spanish → English
+    en_result = _translate(word, "es|en")
+
+    return jsonify({
+        "success": True,
+        "word": word,
+        "chinese": zh_result if zh_result else {"translation": "未找到", "alternatives": []},
+        "english": en_result if en_result else {"translation": "Not found", "alternatives": []},
+    })
 
 
 # --- Stats ---
