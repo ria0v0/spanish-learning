@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>西语学习 📖</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #e74c3c;
+            --primary-light: #ff6b6b;
+            --bg: #fafafa;
+            --card: #ffffff;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --border: #ecf0f1;
+            --success: #27ae60;
+            --warning: #f39c12;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), #c0392b);
+            color: white;
+            padding: 20px 16px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 1.4em; margin-bottom: 4px; }
+        .header .stats { font-size: 0.85em; opacity: 0.9; }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 76px;
+            z-index: 99;
+        }
+        .tab {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 0.9em;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--text-light);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Panels */
+        .panel { display: none; padding: 16px; }
+        .panel.active { display: block; }
+
+        /* Form */
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block;
+            font-size: 0.85em;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+            background: var(--card);
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+        }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn-sm { padding: 6px 12px; font-size: 0.85em; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-outline {
+            background: none;
+            border: 1.5px solid var(--border);
+            color: var(--text);
+        }
+
+        /* Word Cards */
+        .search-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .search-bar input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+        .search-bar input:focus { outline: none; border-color: var(--primary); }
+
+        .tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .tag-chip {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            background: var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tag-chip.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .word-card {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+        }
+        .word-card .spanish {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        .word-card .chinese {
+            font-size: 1em;
+            margin-top: 4px;
+        }
+        .word-card .example {
+            font-size: 0.85em;
+            color: var(--text-light);
+            margin-top: 6px;
+            font-style: italic;
+        }
+        .word-card .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 0.75em;
+            color: var(--text-light);
+        }
+        .word-card .tag-badge {
+            background: #ffeaa7;
+            color: #d63031;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 0.75em;
+        }
+        .word-card .actions {
+            display: flex;
+            gap: 8px;
+        }
+        .word-card .actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            padding: 4px;
+        }
+
+        /* Review Mode */
+        .review-card {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .review-card:active { transform: scale(0.98); }
+        .review-card .spanish { font-size: 1.8em; font-weight: 700; color: var(--primary); }
+        .review-card .answer {
+            margin-top: 16px;
+            font-size: 1.2em;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .review-card .answer.show { opacity: 1; }
+        .review-card .example {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: var(--text-light);
+            font-style: italic;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .review-card .example.show { opacity: 1; }
+        .review-progress {
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 0.9em;
+            color: var(--text-light);
+        }
+        .review-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 999;
+        }
+        .toast.show { opacity: 1; }
+
+        /* Empty state */
+        .empty { text-align: center; padding: 40px 20px; color: var(--text-light); }
+        .empty .emoji { font-size: 2.5em; margin-bottom: 10px; }
+
+        /* Loading */
+        .loading { text-align: center; padding: 20px; color: var(--text-light); }
+
+        @media (min-width: 600px) {
+            .panel { max-width: 600px; margin: 0 auto; }
+            .header { text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🇪🇸 西语学习积累</h1>
+    <div class="stats" id="headerStats">加载中...</div>
+</div>
+
+<div class="tabs">
+    <button class="tab active" onclick="switchTab('add')">➕ 添加</button>
+    <button class="tab" onclick="switchTab('list')">📚 词库</button>
+    <button class="tab" onclick="switchTab('review')">🎯 复习</button>
+</div>
+
+<!-- Add Panel -->
+<div class="panel active" id="panel-add">
+    <div class="form-group">
+        <label>西班牙语 🇪🇸</label>
+        <input type="text" id="inputSpanish" placeholder="ej: buenos días" autocomplete="off">
+    </div>
+    <div class="form-group">
+        <label>中文释义 🇨🇳</label>
+        <input type="text" id="inputChinese" placeholder="早上好">
+    </div>
+    <div class="form-group">
+        <label>例句（可选）</label>
+        <textarea id="inputExample" placeholder="¡Buenos días! ¿Cómo estás?"></textarea>
+    </div>
+    <div class="form-group">
+        <label>标签（可选）</label>
+        <input type="text" id="inputTag" placeholder="ej: 问候, 动词, A1" list="tagSuggestions">
+        <datalist id="tagSuggestions"></datalist>
+    </div>
+    <button class="btn btn-primary" onclick="addWord()">添加 ✓</button>
+</div>
+
+<!-- List Panel -->
+<div class="panel" id="panel-list">
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="搜索词汇..." oninput="debounceSearch()">
+    </div>
+    <div class="tag-filters" id="tagFilters"></div>
+    <div id="wordList"></div>
+</div>
+
+<!-- Review Panel -->
+<div class="panel" id="panel-review">
+    <div id="reviewArea">
+        <div style="text-align:center; margin-bottom:16px;">
+            <select id="reviewTag" onchange="startReview()" style="padding:8px 12px; border-radius:8px; border:1.5px solid var(--border);">
+                <option value="">全部标签</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="startReview()">开始复习 (随机10词)</button>
+    </div>
+    <div id="reviewSession" style="display:none;">
+        <div class="review-progress" id="reviewProgress"></div>
+        <div class="review-card" id="reviewCard" onclick="revealAnswer()">
+            <div class="spanish" id="reviewSpanish"></div>
+            <div class="answer" id="reviewAnswer"></div>
+            <div class="example" id="reviewExample"></div>
+        </div>
+        <div class="review-actions">
+            <button class="btn btn-outline btn-sm" onclick="prevReview()">⬅ 上一个</button>
+            <button class="btn btn-success btn-sm" onclick="markKnown()">✓ 认识</button>
+            <button class="btn btn-primary btn-sm" onclick="nextReview()">下一个 ➡</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// --- State ---
+let currentTag = '';
+let searchTimer = null;
+let reviewWords = [];
+let reviewIndex = 0;
+let reviewRevealed = false;
+
+// --- Tab Switch ---
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+    document.getElementById(`panel-${tab}`).classList.add('active');
+
+    if (tab === 'list') loadWords();
+    if (tab === 'review') loadReviewTags();
+    if (tab === 'add') loadTagSuggestions();
+}
+
+// --- Toast ---
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// --- Add Word ---
+async function addWord() {
+    const spanish = document.getElementById('inputSpanish').value.trim();
+    const chinese = document.getElementById('inputChinese').value.trim();
+    const example = document.getElementById('inputExample').value.trim();
+    const tag = document.getElementById('inputTag').value.trim();
+
+    if (!spanish || !chinese) {
+        showToast('请填写西语和中文释义');
+        return;
+    }
+
+    const res = await fetch('/api/words', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ spanish, chinese, example, tag })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+        showToast('添加成功 ✓');
+        document.getElementById('inputSpanish').value = '';
+        document.getElementById('inputChinese').value = '';
+        document.getElementById('inputExample').value = '';
+        // Keep tag for batch adding
+        document.getElementById('inputSpanish').focus();
+        loadStats();
+    } else {
+        showToast(data.error || '添加失败');
+    }
+}
+
+// --- Load Words ---
+async function loadWords() {
+    const search = document.getElementById('searchInput').value.trim();
+    const container = document.getElementById('wordList');
+    container.innerHTML = '<div class="loading">加载中...</div>';
+
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (currentTag) params.set('tag', currentTag);
+
+    const res = await fetch(`/api/words?${params}`);
+    const data = await res.json();
+
+    if (!data.words.length) {
+        container.innerHTML = '<div class="empty"><div class="emoji">📝</div>还没有词汇，去添加一些吧</div>';
+        return;
+    }
+
+    container.innerHTML = data.words.map(w => `
+        <div class="word-card" id="card-${w.id}">
+            <div class="spanish">${escHtml(w.spanish)}</div>
+            <div class="chinese">${escHtml(w.chinese)}</div>
+            ${w.example ? `<div class="example">"${escHtml(w.example)}"</div>` : ''}
+            <div class="meta">
+                <span>${w.tag ? `<span class="tag-badge">${escHtml(w.tag)}</span>` : ''} 复习${w.review_count}次</span>
+                <span class="actions">
+                    <button onclick="editWord(${w.id})" title="编辑">✏️</button>
+                    <button onclick="deleteWord(${w.id})" title="删除">🗑️</button>
+                </span>
+            </div>
+        </div>
+    `).join('');
+
+    loadTagFilters();
+}
+
+function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(loadWords, 300);
+}
+
+// --- Tag Filters ---
+async function loadTagFilters() {
+    const res = await fetch('/api/tags');
+    const data = await res.json();
+    const container = document.getElementById('tagFilters');
+
+    let html = `<span class="tag-chip ${!currentTag ? 'active' : ''}" onclick="filterTag('')">全部</span>`;
+    data.tags.forEach(t => {
+        html += `<span class="tag-chip ${currentTag === t.tag ? 'active' : ''}" onclick="filterTag('${escHtml(t.tag)}')">${escHtml(t.tag)} (${t.count})</span>`;
+    });
+    container.innerHTML = html;
+}
+
+function filterTag(tag) {
+    currentTag = tag;
+    loadWords();
+}
+
+// --- Tag Suggestions ---
+async function loadTagSuggestions() {
+    const res = await fetch('/api/tags');
+    const data = await res.json();
+    const dl = document.getElementById('tagSuggestions');
+    dl.innerHTML = data.tags.map(t => `<option value="${escHtml(t.tag)}">`).join('');
+}
+
+// --- Delete ---
+async function deleteWord(id) {
+    if (!confirm('确定删除？')) return;
+    await fetch(`/api/words/${id}`, { method: 'DELETE' });
+    document.getElementById(`card-${id}`).remove();
+    showToast('已删除');
+    loadStats();
+}
+
+// --- Edit ---
+async function editWord(id) {
+    const card = document.getElementById(`card-${id}`);
+    const res = await fetch(`/api/words?search=`);
+    const data = await res.json();
+    const word = data.words.find(w => w.id === id);
+    if (!word) return;
+
+    const newSpanish = prompt('西班牙语:', word.spanish);
+    if (newSpanish === null) return;
+    const newChinese = prompt('中文释义:', word.chinese);
+    if (newChinese === null) return;
+    const newExample = prompt('例句:', word.example || '');
+    if (newExample === null) return;
+    const newTag = prompt('标签:', word.tag || '');
+    if (newTag === null) return;
+
+    await fetch(`/api/words/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            spanish: newSpanish,
+            chinese: newChinese,
+            example: newExample,
+            tag: newTag
+        })
+    });
+    showToast('已更新');
+    loadWords();
+}
+
+// --- Review ---
+async function loadReviewTags() {
+    const res = await fetch('/api/tags');
+    const data = await res.json();
+    const select = document.getElementById('reviewTag');
+    select.innerHTML = '<option value="">全部标签</option>';
+    data.tags.forEach(t => {
+        select.innerHTML += `<option value="${escHtml(t.tag)}">${escHtml(t.tag)} (${t.count})</option>`;
+    });
+}
+
+async function startReview() {
+    const tag = document.getElementById('reviewTag').value;
+    const params = new URLSearchParams({ count: 10 });
+    if (tag) params.set('tag', tag);
+
+    const res = await fetch(`/api/review/random?${params}`);
+    const data = await res.json();
+
+    if (!data.words.length) {
+        showToast('没有可复习的词汇');
+        return;
+    }
+
+    reviewWords = data.words;
+    reviewIndex = 0;
+    reviewRevealed = false;
+
+    document.getElementById('reviewArea').style.display = 'none';
+    document.getElementById('reviewSession').style.display = 'block';
+    showReviewCard();
+}
+
+function showReviewCard() {
+    const w = reviewWords[reviewIndex];
+    document.getElementById('reviewProgress').textContent = `${reviewIndex + 1} / ${reviewWords.length}`;
+    document.getElementById('reviewSpanish').textContent = w.spanish;
+    document.getElementById('reviewAnswer').textContent = w.chinese;
+    document.getElementById('reviewAnswer').classList.remove('show');
+    document.getElementById('reviewExample').textContent = w.example ? `"${w.example}"` : '';
+    document.getElementById('reviewExample').classList.remove('show');
+    reviewRevealed = false;
+}
+
+function revealAnswer() {
+    document.getElementById('reviewAnswer').classList.add('show');
+    document.getElementById('reviewExample').classList.add('show');
+    reviewRevealed = true;
+}
+
+function nextReview() {
+    if (reviewIndex < reviewWords.length - 1) {
+        reviewIndex++;
+        showReviewCard();
+    } else {
+        showToast('复习完成！🎉');
+        document.getElementById('reviewArea').style.display = 'block';
+        document.getElementById('reviewSession').style.display = 'none';
+    }
+}
+
+function prevReview() {
+    if (reviewIndex > 0) {
+        reviewIndex--;
+        showReviewCard();
+    }
+}
+
+async function markKnown() {
+    const w = reviewWords[reviewIndex];
+    await fetch('/api/review/mark', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ word_id: w.id })
+    });
+    showToast('✓ 已标记');
+    nextReview();
+}
+
+// --- Stats ---
+async function loadStats() {
+    const res = await fetch('/api/stats');
+    const data = await res.json();
+    document.getElementById('headerStats').textContent =
+        `总计 ${data.total} 词 · 今日 +${data.today_added} · 已复习 ${data.reviewed}`;
+}
+
+// --- Utils ---
+function escHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// --- Keyboard shortcut ---
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.ctrlKey) {
+        const addPanel = document.getElementById('panel-add');
+        if (addPanel.classList.contains('active')) addWord();
+    }
+});
+
+// --- Init ---
+loadStats();
+loadTagSuggestions();
+</script>
+
+</body>
+</html>

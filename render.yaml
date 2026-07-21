@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: spanish-learning
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+    disk:
+      name: spanish-data
+      mountPath: /data
+      sizeGB: 1
