@@ -185,12 +185,17 @@
         let canvasCtx = null;
 
         function initAudio() {
-            if (audioCtx) return;
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 256;
-            analyser.connect(audioCtx.destination);
-            initVisualizer();
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+                analyser.connect(audioCtx.destination);
+                initVisualizer();
+            }
+            // Mobile browsers require resume() on user gesture
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
         }
 
         // Timbres - each creates a unique weird sound at the correct frequency
