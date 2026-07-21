@@ -55,6 +55,11 @@ def horse_quiz():
     return render_template("horse.html")
 
 
+@app.route("/virtual-piano")
+def virtual_piano():
+    return render_template("piano.html")
+
+
 # --- CRUD API ---
 
 @app.route("/api/words", methods=["GET"])

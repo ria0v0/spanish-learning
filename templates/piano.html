@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你从未听过的神级音色</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            user-select: none;
+        }
+
+        h1 {
+            margin-top: 20px;
+            margin-bottom: 5px;
+            font-size: 1.8em;
+            text-align: center;
+            background: linear-gradient(90deg, #f093fb, #f5576c, #ffd200);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #aaa;
+            margin-bottom: 25px;
+            font-size: 0.9em;
+        }
+
+        .timbre-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .timbre-btn {
+            padding: 10px 18px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            background: rgba(255,255,255,0.05);
+            color: #ccc;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .timbre-btn:hover {
+            border-color: rgba(255,255,255,0.5);
+            color: white;
+        }
+
+        .timbre-btn.active {
+            border-color: #f5576c;
+            background: rgba(245, 87, 108, 0.2);
+            color: white;
+            box-shadow: 0 0 15px rgba(245, 87, 108, 0.3);
+        }
+
+        .piano-container {
+            display: flex;
+            position: relative;
+            height: 220px;
+            margin-bottom: 30px;
+        }
+
+        .white-key {
+            width: 50px;
+            height: 200px;
+            background: linear-gradient(180deg, #fff 0%, #e8e8e8 100%);
+            border: 1px solid #999;
+            border-radius: 0 0 6px 6px;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+            transition: background 0.1s;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 12px;
+        }
+
+        .white-key:active, .white-key.pressed {
+            background: linear-gradient(180deg, #ddd 0%, #bbb 100%);
+            transform: translateY(2px);
+        }
+
+        .white-key span {
+            font-size: 0.7em;
+            color: #888;
+            font-weight: bold;
+        }
+
+        .black-key {
+            width: 32px;
+            height: 125px;
+            background: linear-gradient(180deg, #333 0%, #111 100%);
+            border-radius: 0 0 4px 4px;
+            position: absolute;
+            z-index: 2;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .black-key:active, .black-key.pressed {
+            background: linear-gradient(180deg, #555 0%, #333 100%);
+            transform: translateY(2px);
+        }
+
+        .visualizer {
+            width: 100%;
+            max-width: 700px;
+            height: 60px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            overflow: hidden;
+        }
+
+        .visualizer canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .hint {
+            color: #666;
+            font-size: 0.8em;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .current-timbre-display {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #f093fb;
+        }
+
+        @media (max-width: 600px) {
+            .white-key {
+                width: 38px;
+                height: 160px;
+            }
+            .black-key {
+                width: 24px;
+                height: 100px;
+            }
+            .piano-container {
+                height: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎹 你从未听过的神级音色</h1>
+    <p class="subtitle">每个音调都对，但音色嘛...</p>
+
+    <div class="timbre-selector" id="timbre-selector"></div>
+    <div class="current-timbre-display">当前音色：<span id="current-timbre-name"></span></div>
+
+    <div class="visualizer">
+        <canvas id="visualizer"></canvas>
+    </div>
+
+    <div class="piano-container" id="piano"></div>
+
+    <p class="hint">💡 点击琴键或使用键盘 A S D F G H J K（白键）/ W E T Y U（黑键）来演奏</p>
+
+    <script>
+        // Audio context
+        let audioCtx = null;
+        let analyser = null;
+        let canvasCtx = null;
+
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 256;
+            analyser.connect(audioCtx.destination);
+            initVisualizer();
+        }
+
+        // Timbres - each creates a unique weird sound at the correct frequency
+        const timbres = {
+            "🦆 赛博鸭子": function(freq, ctx, dest) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const lfo = ctx.createOscillator();
+                const lfoGain = ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.value = freq;
+                lfo.type = 'square';
+                lfo.frequency.value = 25;
+                lfoGain.gain.value = freq * 0.3;
+
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                osc.connect(gain);
+                gain.connect(dest);
+
+                gain.gain.setValueAtTime(0.4, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+
+                osc.start();
+                lfo.start();
+                osc.stop(ctx.currentTime + 0.4);
+                lfo.stop(ctx.currentTime + 0.4);
+            },
+
+            "🐱 电子猫咪": function(freq, ctx, dest) {
+                const osc = ctx.createOscillator();
+                const osc2 = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                osc2.type = 'sine';
+                osc2.frequency.value = freq * 1.5;
+
+                osc.connect(gain);
+                osc2.connect(gain);
+                gain.connect(dest);
+
+                // Meow-like envelope: slide up then down
+                osc.frequency.setValueAtTime(freq * 0.8, ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(freq * 1.2, ctx.currentTime + 0.1);
+                osc.frequency.linearRampToValueAtTime(freq * 0.6, ctx.currentTime + 0.5);
+
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+
+                osc.start();
+                osc2.start();
+                osc.stop(ctx.currentTime + 0.5);
+                osc2.stop(ctx.currentTime + 0.5);
+            },
+
+            "💨 量子放屁": function(freq, ctx, dest) {
+                const bufferSize = ctx.sampleRate * 0.3;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+
+                // Filtered noise at the target frequency
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * freq / ctx.sampleRate * i);
+                }
+
+                const source = ctx.createBufferSource();
+                source.buffer = buffer;
+
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = freq;
+                filter.Q.value = 2;
+
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+
+                source.connect(filter);
+                filter.connect(gain);
+                gain.connect(dest);
+
+                // Pitch drop for realism
+                filter.frequency.setValueAtTime(freq, ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(freq * 0.4, ctx.currentTime + 0.3);
+
+                source.start();
+            },
+
+            "🎺 醉酒小号": function(freq, ctx, dest) {
+                const osc = ctx.createOscillator();
+                const osc2 = ctx.createOscillator();
+                const osc3 = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                // Brassy harmonics with wobble
+                osc.type = 'sawtooth';
+                osc.frequency.value = freq;
+                osc2.type = 'square';
+                osc2.frequency.value = freq * 2.01; // slightly detuned
+                osc3.type = 'sawtooth';
+                osc3.frequency.value = freq * 3.02;
+
+                // Drunk wobble
+                const lfo = ctx.createOscillator();
+                const lfoGain = ctx.createGain();
+                lfo.frequency.value = 5 + Math.random() * 3;
+                lfoGain.gain.value = freq * 0.05;
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+
+                osc.connect(gain);
+                osc2.connect(gain);
+                osc3.connect(gain);
+                gain.connect(dest);
+
+                gain.gain.setValueAtTime(0, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+
+                osc.start(); osc2.start(); osc3.start(); lfo.start();
+                osc.stop(ctx.currentTime + 0.6);
+                osc2.stop(ctx.currentTime + 0.6);
+                osc3.stop(ctx.currentTime + 0.6);
+                lfo.stop(ctx.currentTime + 0.6);
+            },
+
+            "👻 幽灵低语": function(freq, ctx, dest) {
+                const osc = ctx.createOscillator();
+                const osc2 = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const reverb = ctx.createConvolver();
+
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                osc2.type = 'sine';
+                osc2.frequency.value = freq + 2; // beating effect
+
+                osc.connect(gain);
+                osc2.connect(gain);
+                gain.connect(dest);
+
+                // Ghostly fade in/out
+                gain.gain.setValueAtTime(0, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.2);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2);
+
+                osc.start();
+                osc2.start();
+                osc.stop(ctx.currentTime + 1.2);
+                osc2.stop(ctx.currentTime + 1.2);
+            },
+
+            "🤖 机器人打嗝": function(freq, ctx, dest) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'square';
+                osc.frequency.value = freq;
+
+                osc.connect(gain);
+                gain.connect(dest);
+
+                // Hiccup: quick pitch jumps
+                const t = ctx.currentTime;
+                osc.frequency.setValueAtTime(freq * 2, t);
+                osc.frequency.setValueAtTime(freq * 0.5, t + 0.05);
+                osc.frequency.setValueAtTime(freq * 1.5, t + 0.1);
+                osc.frequency.setValueAtTime(freq, t + 0.15);
+
+                gain.gain.setValueAtTime(0.3, t);
+                gain.gain.setValueAtTime(0.4, t + 0.05);
+                gain.gain.setValueAtTime(0.2, t + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+
+                osc.start();
+                osc.stop(t + 0.3);
+            },
+
+            "🌊 深海鲸鱼": function(freq, ctx, dest) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.value = freq * 0.5; // one octave lower for whale feel
+
+                const lfo = ctx.createOscillator();
+                const lfoGain = ctx.createGain();
+                lfo.type = 'sine';
+                lfo.frequency.value = 0.8;
+                lfoGain.gain.value = freq * 0.15;
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+
+                osc.connect(gain);
+                gain.connect(dest);
+
+                // Long, haunting
+                gain.gain.setValueAtTime(0, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + 0.3);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.5);
+
+                // Pitch glide
+                osc.frequency.setValueAtTime(freq * 0.5, ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(freq * 0.7, ctx.currentTime + 0.8);
+                osc.frequency.linearRampToValueAtTime(freq * 0.4, ctx.currentTime + 1.5);
+
+                osc.start();
+                lfo.start();
+                osc.stop(ctx.currentTime + 1.5);
+                lfo.stop(ctx.currentTime + 1.5);
+            },
+
+            "🪕 外星班卓琴": function(freq, ctx, dest) {
+                const osc = ctx.createOscillator();
+                const osc2 = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.value = freq;
+                osc2.type = 'sawtooth';
+                osc2.frequency.value = freq * 4; // high harmonic twang
+
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = freq * 2;
+                filter.Q.value = 10;
+
+                osc.connect(gain);
+                osc2.connect(filter);
+                filter.connect(gain);
+                gain.connect(dest);
+
+                // Sharp pluck decay
+                gain.gain.setValueAtTime(0.4, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+
+                // Frequency slides down slightly
+                osc.frequency.setValueAtTime(freq * 1.05, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(freq, ctx.currentTime + 0.05);
+
+                osc.start(); osc2.start();
+                osc.stop(ctx.currentTime + 0.3);
+                osc2.stop(ctx.currentTime + 0.3);
+            }
+        };
+
+        let currentTimbre = Object.keys(timbres)[0];
+
+        // Note frequencies (C4 to C5)
+        const notes = [
+            { note: 'C4', freq: 261.63, key: 'a' },
+            { note: 'C#4', freq: 277.18, key: 'w', black: true },
+            { note: 'D4', freq: 293.66, key: 's' },
+            { note: 'D#4', freq: 311.13, key: 'e', black: true },
+            { note: 'E4', freq: 329.63, key: 'd' },
+            { note: 'F4', freq: 349.23, key: 'f' },
+            { note: 'F#4', freq: 369.99, key: 't', black: true },
+            { note: 'G4', freq: 392.00, key: 'g' },
+            { note: 'G#4', freq: 415.30, key: 'y', black: true },
+            { note: 'A4', freq: 440.00, key: 'h' },
+            { note: 'A#4', freq: 466.16, key: 'u', black: true },
+            { note: 'B4', freq: 493.88, key: 'j' },
+            { note: 'C5', freq: 523.25, key: 'k' },
+        ];
+
+        // Build timbre selector
+        const selectorDiv = document.getElementById('timbre-selector');
+        Object.keys(timbres).forEach((name, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'timbre-btn' + (i === 0 ? ' active' : '');
+            btn.textContent = name;
+            btn.onclick = () => {
+                document.querySelectorAll('.timbre-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTimbre = name;
+                document.getElementById('current-timbre-name').textContent = name;
+            };
+            selectorDiv.appendChild(btn);
+        });
+        document.getElementById('current-timbre-name').textContent = currentTimbre;
+
+        // Build piano
+        const pianoDiv = document.getElementById('piano');
+        let whiteKeyIndex = 0;
+
+        notes.forEach((n, i) => {
+            if (!n.black) {
+                const key = document.createElement('div');
+                key.className = 'white-key';
+                key.dataset.index = i;
+                key.innerHTML = `<span>${n.key.toUpperCase()}</span>`;
+                key.onmousedown = () => { initAudio(); playNote(i); key.classList.add('pressed'); };
+                key.onmouseup = () => key.classList.remove('pressed');
+                key.onmouseleave = () => key.classList.remove('pressed');
+                key.ontouchstart = (e) => { e.preventDefault(); initAudio(); playNote(i); key.classList.add('pressed'); };
+                key.ontouchend = () => key.classList.remove('pressed');
+                pianoDiv.appendChild(key);
+                whiteKeyIndex++;
+            }
+        });
+
+        // Add black keys with absolute positioning
+        let whitePos = 0;
+        const whiteWidth = window.innerWidth <= 600 ? 38 : 50;
+        const blackWidth = window.innerWidth <= 600 ? 24 : 32;
+
+        notes.forEach((n, i) => {
+            if (n.black) {
+                const key = document.createElement('div');
+                key.className = 'black-key';
+                key.dataset.index = i;
+                // Position black key between the two white keys
+                key.style.left = (whitePos * whiteWidth - blackWidth / 2) + 'px';
+                key.onmousedown = () => { initAudio(); playNote(i); key.classList.add('pressed'); };
+                key.onmouseup = () => key.classList.remove('pressed');
+                key.onmouseleave = () => key.classList.remove('pressed');
+                key.ontouchstart = (e) => { e.preventDefault(); initAudio(); playNote(i); key.classList.add('pressed'); };
+                key.ontouchend = () => key.classList.remove('pressed');
+                pianoDiv.appendChild(key);
+            } else {
+                whitePos++;
+            }
+        });
+
+        function playNote(index) {
+            const note = notes[index];
+            const playFn = timbres[currentTimbre];
+            if (playFn && audioCtx) {
+                playFn(note.freq, audioCtx, analyser);
+            }
+        }
+
+        // Keyboard support
+        const keyMap = {};
+        notes.forEach((n, i) => { keyMap[n.key] = i; });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            const index = keyMap[e.key.toLowerCase()];
+            if (index !== undefined) {
+                initAudio();
+                playNote(index);
+                const el = document.querySelector(`[data-index="${index}"]`);
+                if (el) el.classList.add('pressed');
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            const index = keyMap[e.key.toLowerCase()];
+            if (index !== undefined) {
+                const el = document.querySelector(`[data-index="${index}"]`);
+                if (el) el.classList.remove('pressed');
+            }
+        });
+
+        // Visualizer
+        function initVisualizer() {
+            const canvas = document.getElementById('visualizer');
+            canvasCtx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth * 2;
+            canvas.height = canvas.offsetHeight * 2;
+            drawVisualizer();
+        }
+
+        function drawVisualizer() {
+            if (!analyser || !canvasCtx) {
+                requestAnimationFrame(drawVisualizer);
+                return;
+            }
+
+            const canvas = canvasCtx.canvas;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteFrequencyData(dataArray);
+
+            canvasCtx.fillStyle = 'rgba(15, 12, 41, 0.3)';
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const barWidth = (canvas.width / bufferLength) * 2.5;
+            let x = 0;
+
+            for (let i = 0; i < bufferLength; i++) {
+                const barHeight = (dataArray[i] / 255) * canvas.height;
+
+                const hue = (i / bufferLength) * 360;
+                canvasCtx.fillStyle = `hsla(${hue}, 80%, 60%, 0.8)`;
+                canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                x += barWidth + 1;
+            }
+
+            requestAnimationFrame(drawVisualizer);
+        }
+    </script>
+</body>
+</html>
