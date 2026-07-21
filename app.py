@@ -261,6 +261,61 @@ def dictionary_lookup():
     })
 
 
+# --- Verb Conjugation ---
+
+@app.route("/api/conjugate", methods=["GET"])
+def conjugate_verb():
+    """查询动词变位"""
+    from conjugations import get_conjugation, PRONOUNS, TENSE_NAMES, IRREGULAR_VERBS
+    verb = request.args.get("verb", "").strip().lower()
+    if not verb:
+        return jsonify({"success": False, "error": "请输入动词原形"})
+
+    result = get_conjugation(verb)
+    if not result:
+        return jsonify({"success": False, "error": f"未找到动词 '{verb}' 的变位。请输入动词原形（如 hablar, comer, vivir）"})
+
+    return jsonify({
+        "success": True,
+        "verb": verb,
+        "meaning": result.get("meaning", ""),
+        "meaning_zh": result.get("meaning_zh", ""),
+        "is_irregular": verb in IRREGULAR_VERBS,
+        "pronouns": PRONOUNS,
+        "tense_names": TENSE_NAMES,
+        "conjugations": {k: v for k, v in result.items() if k not in ("meaning", "meaning_zh")},
+    })
+
+
+@app.route("/api/conjugate/list", methods=["GET"])
+def list_verbs():
+    """列出所有可查询的不规则动词"""
+    from conjugations import IRREGULAR_VERBS
+    verbs = [{"verb": v, "meaning": data["meaning"], "meaning_zh": data["meaning_zh"]}
+             for v, data in IRREGULAR_VERBS.items()]
+    return jsonify({"success": True, "verbs": verbs})
+
+
+# --- Daily Reading ---
+
+@app.route("/api/reading/today", methods=["GET"])
+def today_reading():
+    """获取今日阅读"""
+    from daily_readings import get_reading_for_today
+    reading = get_reading_for_today()
+    return jsonify({"success": True, "reading": reading})
+
+
+@app.route("/api/reading/<int:index>", methods=["GET"])
+def get_reading(index):
+    """获取指定阅读"""
+    from daily_readings import get_reading_by_index
+    reading = get_reading_by_index(index)
+    if not reading:
+        return jsonify({"success": False, "error": "未找到该阅读"})
+    return jsonify({"success": True, "reading": reading})
+
+
 # --- Text-to-Speech ---
 
 @app.route("/api/tts", methods=["GET"])
@@ -271,8 +326,8 @@ def text_to_speech():
         return jsonify({"success": False, "error": "缺少文本"}), 400
 
     # Limit text length for safety
-    if len(text) > 200:
-        text = text[:200]
+    if len(text) > 500:
+        text = text[:500]
 
     try:
         from gtts import gTTS

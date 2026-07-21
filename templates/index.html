@@ -312,6 +312,144 @@
             width: 100%;
         }
 
+        /* Conjugation Table */
+        .conj-card {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        .conj-card .tense-name {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        .conj-table {
+            width: 100%;
+            font-size: 0.9em;
+        }
+        .conj-table td {
+            padding: 3px 6px;
+            border-bottom: 1px solid var(--border);
+        }
+        .conj-table td:first-child {
+            color: var(--text-light);
+            width: 40%;
+            font-size: 0.85em;
+        }
+        .conj-table td:last-child {
+            font-weight: 500;
+        }
+        .conj-verb-header {
+            text-align: center;
+            margin-bottom: 14px;
+        }
+        .conj-verb-header .verb-name {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .conj-verb-header .verb-meaning {
+            font-size: 0.9em;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+        .conj-verb-header .irregular-badge {
+            display: inline-block;
+            background: var(--warning);
+            color: white;
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 8px;
+            margin-left: 6px;
+        }
+        .quick-verbs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .quick-verbs span {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            background: var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quick-verbs span:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Reading */
+        .reading-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .reading-card .reading-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        .reading-card .reading-level {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            font-size: 0.7em;
+            padding: 2px 8px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .reading-card .reading-text {
+            font-size: 1.05em;
+            line-height: 1.7;
+            margin-bottom: 14px;
+            padding: 12px;
+            background: #fef9e7;
+            border-radius: 8px;
+            border-left: 4px solid var(--warning);
+        }
+        .reading-card .reading-translation {
+            font-size: 0.9em;
+            color: var(--text-light);
+            margin-bottom: 14px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .reading-card .grammar-section {
+            margin-top: 12px;
+        }
+        .reading-card .grammar-title {
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+        .grammar-item {
+            background: #f0f8ff;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-left: 3px solid #3498db;
+        }
+        .grammar-item .grammar-point {
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #2980b9;
+            font-family: monospace;
+        }
+        .grammar-item .grammar-explain {
+            font-size: 0.85em;
+            color: var(--text);
+            margin-top: 3px;
+        }
+
         @media (min-width: 600px) {
             .panel { max-width: 600px; margin: 0 auto; }
             .header { text-align: center; }
@@ -328,6 +466,8 @@
 <div class="tabs">
     <button class="tab active" onclick="switchTab('add')">➕ 添加</button>
     <button class="tab" onclick="switchTab('dict')">📖 词典</button>
+    <button class="tab" onclick="switchTab('conjugar')">🔤 变位</button>
+    <button class="tab" onclick="switchTab('read')">📰 阅读</button>
     <button class="tab" onclick="switchTab('list')">📚 词库</button>
     <button class="tab" onclick="switchTab('review')">🎯 复习</button>
 </div>
@@ -361,6 +501,25 @@
         <button class="btn btn-primary btn-sm" onclick="lookupWord()" style="white-space:nowrap;">查询</button>
     </div>
     <div id="dictResult"></div>
+</div>
+
+<!-- Conjugation Panel -->
+<div class="panel" id="panel-conjugar">
+    <div class="search-bar">
+        <input type="text" id="conjInput" placeholder="输入动词原形 (ej: hablar, ser, tener)..." onkeydown="if(event.key==='Enter')lookupConjugation()">
+        <button class="btn btn-primary btn-sm" onclick="lookupConjugation()" style="white-space:nowrap;">查变位</button>
+    </div>
+    <div id="conjQuickLinks" style="margin-bottom:12px;"></div>
+    <div id="conjResult"></div>
+</div>
+
+<!-- Reading Panel -->
+<div class="panel" id="panel-read">
+    <div id="readingContent"></div>
+    <div style="display:flex; gap:8px; justify-content:center; margin-top:16px;">
+        <button class="btn btn-outline btn-sm" onclick="changeReading(-1)">⬅ 上一篇</button>
+        <button class="btn btn-outline btn-sm" onclick="changeReading(1)">下一篇 ➡</button>
+    </div>
 </div>
 
 <!-- List Panel -->
@@ -419,6 +578,8 @@ function switchTab(tab) {
     if (tab === 'review') loadReviewTags();
     if (tab === 'add') loadTagSuggestions();
     if (tab === 'dict') document.getElementById('dictInput').focus();
+    if (tab === 'conjugar') loadQuickVerbs();
+    if (tab === 'read') loadTodayReading();
 }
 
 // --- Toast ---
@@ -734,6 +895,122 @@ function addFromDict(spanish, chinese) {
     document.getElementById('inputChinese').value = chinese;
     switchTab('add');
     showToast('已填入，可补充例句和标签后添加');
+}
+
+// --- Conjugation ---
+async function loadQuickVerbs() {
+    const res = await fetch('/api/conjugate/list');
+    const data = await res.json();
+    const container = document.getElementById('conjQuickLinks');
+    container.innerHTML = '<div class="quick-verbs">' +
+        data.verbs.map(v => `<span onclick="quickConj('${v.verb}')">${v.verb}</span>`).join('') +
+        '</div>';
+}
+
+function quickConj(verb) {
+    document.getElementById('conjInput').value = verb;
+    lookupConjugation();
+}
+
+async function lookupConjugation() {
+    const verb = document.getElementById('conjInput').value.trim().toLowerCase();
+    if (!verb) { showToast('请输入动词原形'); return; }
+
+    const container = document.getElementById('conjResult');
+    container.innerHTML = '<div class="loading">查询中...</div>';
+
+    const res = await fetch(`/api/conjugate?verb=${encodeURIComponent(verb)}`);
+    const data = await res.json();
+
+    if (!data.success) {
+        container.innerHTML = `<div class="empty">${data.error}</div>`;
+        return;
+    }
+
+    let html = `
+        <div class="conj-verb-header">
+            <span class="verb-name">${escHtml(data.verb)}</span>
+            <button onclick="speak('${data.verb.replace(/'/g, "\\'")}')" style="background:none;border:none;cursor:pointer;font-size:1em;">🔊</button>
+            ${data.is_irregular ? '<span class="irregular-badge">不规则</span>' : ''}
+            <div class="verb-meaning">${escHtml(data.meaning_zh)} ${data.meaning ? '/ ' + escHtml(data.meaning) : ''}</div>
+        </div>
+    `;
+
+    for (const [tense, forms] of Object.entries(data.conjugations)) {
+        const tenseName = data.tense_names[tense] || tense;
+        html += `<div class="conj-card">
+            <div class="tense-name">${escHtml(tenseName)}</div>
+            <table class="conj-table">`;
+        data.pronouns.forEach((pronoun, i) => {
+            html += `<tr><td>${escHtml(pronoun)}</td><td>${escHtml(forms[i])}</td></tr>`;
+        });
+        html += `</table></div>`;
+    }
+
+    container.innerHTML = html;
+}
+
+// --- Daily Reading ---
+let currentReadingIndex = -1;
+
+async function loadTodayReading() {
+    const container = document.getElementById('readingContent');
+    container.innerHTML = '<div class="loading">加载中...</div>';
+
+    const res = await fetch('/api/reading/today');
+    const data = await res.json();
+
+    if (data.success) {
+        currentReadingIndex = data.reading.day_index;
+        renderReading(data.reading);
+    }
+}
+
+async function changeReading(direction) {
+    const total = 14; // we know there are 14 readings
+    currentReadingIndex = (currentReadingIndex + direction + total) % total;
+
+    const res = await fetch(`/api/reading/${currentReadingIndex}`);
+    const data = await res.json();
+
+    if (data.success) {
+        renderReading(data.reading);
+    }
+}
+
+function renderReading(reading) {
+    const container = document.getElementById('readingContent');
+    let grammarHtml = reading.grammar.map(g => `
+        <div class="grammar-item">
+            <div class="grammar-point">${escHtml(g.point)}</div>
+            <div class="grammar-explain">${escHtml(g.explanation)}</div>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="reading-card">
+            <div class="reading-title">${escHtml(reading.title)}
+                <button onclick="speak('${reading.title.replace(/'/g, "\\'")}')" style="background:none;border:none;cursor:pointer;font-size:0.8em;">🔊</button>
+            </div>
+            <span class="reading-level">${escHtml(reading.level)}</span>
+            <div class="reading-text">
+                ${escHtml(reading.text)}
+                <div style="text-align:right;margin-top:8px;">
+                    <button onclick="speak(\`${reading.text.replace(/`/g, '').replace(/'/g, "\\'")}\`)" class="btn btn-outline btn-sm">🔊 朗读全文</button>
+                </div>
+            </div>
+            <div class="reading-translation">
+                🇨🇳 ${escHtml(reading.translation)}
+            </div>
+            <div class="grammar-section">
+                <div class="grammar-title">📝 语法要点</div>
+                ${grammarHtml}
+            </div>
+            <div style="text-align:center;margin-top:10px;font-size:0.8em;color:var(--text-light);">
+                第 ${reading.day_index + 1} / ${reading.total} 篇
+            </div>
+        </div>
+    `;
 }
 
 // --- Init ---
