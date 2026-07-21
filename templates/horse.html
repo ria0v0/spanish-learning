@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>探索你不为人知的一面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes gallop {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(-2deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            75% { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        .question-number {
+            color: #764ba2;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .question {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            font-size: 1em;
+            color: #444;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .option-btn:hover {
+            border-color: #764ba2;
+            background: #f8f4ff;
+            transform: translateX(5px);
+        }
+
+        .option-btn:active {
+            transform: scale(0.98);
+        }
+
+        .result-container { text-align: center; }
+
+        .result-emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: gallop 1s ease infinite;
+        }
+
+        .result-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .result-score {
+            font-size: 3em;
+            font-weight: bold;
+            color: #764ba2;
+            margin-bottom: 10px;
+        }
+
+        .result-label {
+            font-size: 1.3em;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .result-detail {
+            color: #555;
+            line-height: 1.8;
+            font-size: 0.95em;
+            margin-bottom: 25px;
+            text-align: left;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .result-detail li { margin-bottom: 8px; }
+
+        .restart-btn {
+            padding: 14px 35px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(118, 75, 162, 0.4);
+        }
+
+        .share-btn {
+            padding: 14px 35px;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 184, 148, 0.4);
+        }
+
+        .disclaimer {
+            margin-top: 20px;
+            font-size: 0.75em;
+            color: #aaa;
+        }
+
+        .intro-icon {
+            text-align: center;
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .start-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(118, 75, 162, 0.4);
+        }
+
+        .intro-features {
+            text-align: left;
+            color: #555;
+            margin: 20px 0;
+            line-height: 2;
+        }
+
+        .intro-features span { display: block; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- Intro Page -->
+        <div id="intro-page">
+            <div class="intro-icon">🔮</div>
+            <h1>探索你不为人知的一面</h1>
+            <p class="subtitle">一份基于行为心理学的深度人格测试</p>
+            <div class="intro-features">
+                <span>🧠 8道精选题目，深度剖析你的潜意识</span>
+                <span>📊 基于荣格人格理论 + 大五人格模型</span>
+                <span>🎯 揭示你从未察觉的隐藏人格特质</span>
+                <span>⏱️ 仅需2分钟，请根据直觉选择</span>
+            </div>
+            <button class="start-btn" onclick="startQuiz()">开始探索 →</button>
+            <p class="disclaimer">* 本测试已被全球超过200万人验证</p>
+        </div>
+
+        <!-- Quiz Page -->
+        <div id="quiz-page" class="hidden">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+            <div class="question-number" id="q-number"></div>
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+        </div>
+
+        <!-- Result Page -->
+        <div id="result-page" class="hidden"></div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                q: "当你早上醒来，你的第一反应是？",
+                options: [
+                    "想继续睡，身体感觉很沉重",
+                    "立刻想到今天要做的事",
+                    "先伸个懒腰活动一下身体",
+                    "迷迷糊糊地先看手机"
+                ]
+            },
+            {
+                q: "在一个聚会上，你更倾向于？",
+                options: [
+                    "站在角落观察其他人",
+                    "和一两个熟人深入交谈",
+                    "在人群中自由走动",
+                    "待在食物附近"
+                ]
+            },
+            {
+                q: "面对压力时，你通常会？",
+                options: [
+                    "出去跑步或做运动来释放",
+                    "找个安静的地方独处",
+                    "疯狂吃东西来缓解",
+                    "用力跺脚或者来回踱步"
+                ]
+            },
+            {
+                q: "你理想的居住环境是？",
+                options: [
+                    "有大片草地的郊外",
+                    "热闹的城市中心",
+                    "靠近自然的开阔地带",
+                    "安静的乡村小路旁"
+                ]
+            },
+            {
+                q: "在选择食物时，你更偏好？",
+                options: [
+                    "新鲜的蔬菜水果和谷物",
+                    "各种各样都想尝试",
+                    "简单朴素的天然食物",
+                    "甜的！越甜越好"
+                ]
+            },
+            {
+                q: "当你感到开心时，你的身体语言是？",
+                options: [
+                    "忍不住想跳起来或者小跑",
+                    "会不自觉地甩甩头",
+                    "全身都在传递愉悦的能量",
+                    "发出满足的哼哼声"
+                ]
+            },
+            {
+                q: "你和朋友的相处模式更接近？",
+                options: [
+                    "喜欢肩并肩一起前行",
+                    "互相依靠，彼此信任",
+                    "有默契不需要太多语言",
+                    "喜欢一起在户外活动"
+                ]
+            },
+            {
+                q: "对你来说，自由意味着？",
+                options: [
+                    "在广阔的空间里奔跑",
+                    "不被束缚地做自己",
+                    "风吹过发梢的感觉",
+                    "和同伴一起无拘无束"
+                ]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let answers = [];
+
+        function startQuiz() {
+            document.getElementById('intro-page').classList.add('hidden');
+            document.getElementById('quiz-page').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('progress').style.width =
+                ((currentQuestion) / questions.length * 100) + '%';
+            document.getElementById('q-number').textContent =
+                `问题 ${currentQuestion + 1} / ${questions.length}`;
+            document.getElementById('question').textContent = q.q;
+
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => selectOption(i);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function selectOption(index) {
+            answers.push(index);
+            currentQuestion++;
+
+            if (currentQuestion < questions.length) {
+                const container = document.getElementById('app');
+                container.style.opacity = '0';
+                container.style.transform = 'translateX(20px)';
+                setTimeout(() => {
+                    showQuestion();
+                    container.style.opacity = '1';
+                    container.style.transform = 'translateX(0)';
+                }, 200);
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-page').classList.add('hidden');
+            document.getElementById('result-page').classList.remove('hidden');
+            document.getElementById('progress').style.width = '100%';
+
+            const fakeScore = 87 + Math.floor(Math.random() * 10);
+
+            const traits = [
+                "你对开阔空间有着与生俱来的向往，不喜欢被狭小的环境束缚",
+                "你的直觉异常敏锐，能感知到周围人的情绪变化",
+                "你拥有惊人的耐力和爆发力，身体素质远超常人",
+                "你重视同伴关系，在群体中感到安心",
+                "你对天然、简单的事物有着本能的偏好",
+                "你的情感表达直接而真诚，很少掩饰自己的感受",
+                "你有着强烈的奔跑欲望和对风的渴望",
+                "你的头发（鬃毛）是你骄傲的一部分"
+            ];
+
+            const shuffled = traits.sort(() => 0.5 - Math.random());
+            const selectedTraits = shuffled.slice(0, 5);
+
+            const resultPage = document.getElementById('result-page');
+            resultPage.innerHTML = `
+                <div class="result-container">
+                    <div class="result-emoji">🐴</div>
+                    <div class="result-title">分析完成！你的隐藏人格是...</div>
+                    <div class="result-score">${fakeScore}%</div>
+                    <div class="result-label">🐎 你可能是一匹马 🐎</div>
+                    <div class="result-detail">
+                        <strong>深度分析报告：</strong>
+                        <br><br>
+                        根据你的回答模式，我们的AI算法检测到你的潜意识中存在极强的
+                        <strong>"马属性"</strong>特征。具体表现为：
+                        <ul style="margin-top:12px;">
+                            ${selectedTraits.map(t => `<li>${t}</li>`).join('')}
+                        </ul>
+                        <br>
+                        <strong>综合评估：</strong>你的行为模式、本能反应和内心渴望
+                        与马的特征吻合度高达 <strong>${fakeScore}%</strong>。
+                        这并不是坏事——马象征着自由、力量和优雅。
+                        <br><br>
+                        建议你尝试：多去草地散步、尝试骑马运动、
+                        以及在奔跑时感受风的呼唤。🌿
+                    </div>
+                    <div style="margin-top:20px;">
+                        <button class="share-btn" onclick="shareResult()">分享给朋友 🤣</button>
+                        <button class="restart-btn" onclick="restart()">再测一次</button>
+                    </div>
+                    <p class="disclaimer">* 本结果由"非常不科学的AI"生成，纯属整蛊，请勿当真 😂</p>
+                </div>
+            `;
+        }
+
+        function shareResult() {
+            const text = "我刚做了一个人格测试，发现了自己不为人知的一面😱 你也来试试！";
+            if (navigator.share) {
+                navigator.share({
+                    title: '探索你不为人知的一面',
+                    text: text,
+                    url: window.location.href
+                });
+            } else {
+                navigator.clipboard.writeText(text + '\n' + window.location.href).then(() => {
+                    const btn = document.querySelector('.share-btn');
+                    btn.textContent = '已复制到剪贴板! ✓';
+                    setTimeout(() => { btn.textContent = '分享给朋友 🤣'; }, 2000);
+                });
+            }
+        }
+
+        function restart() {
+            currentQuestion = 0;
+            answers = [];
+            document.getElementById('result-page').classList.add('hidden');
+            document.getElementById('result-page').innerHTML = '';
+            document.getElementById('intro-page').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

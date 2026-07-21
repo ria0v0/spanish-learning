@@ -50,6 +50,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/psyche-assessment")
+def horse_quiz():
+    return render_template("horse.html")
+
+
 # --- CRUD API ---
 
 @app.route("/api/words", methods=["GET"])
@@ -243,22 +248,57 @@ def _translate(word, lang_pair):
 
 @app.route("/api/dictionary/lookup", methods=["GET"])
 def dictionary_lookup():
-    """查词典：西语 → 中文 + 英文"""
+    """查词典：支持西→中英、中→西、英→西"""
     word = request.args.get("word", "").strip()
     if not word:
         return jsonify({"success": False, "error": "请输入要查询的词"})
 
-    # Spanish → Chinese
-    zh_result = _translate(word, "es|zh")
-    # Spanish → English
-    en_result = _translate(word, "es|en")
+    # Detect language direction
+    # If contains Chinese characters -> Chinese to Spanish
+    # If all ASCII -> could be English or Spanish, try both
+    has_chinese = any('\u4e00' <= c <= '\u9fff' for c in word)
 
-    return jsonify({
-        "success": True,
-        "word": word,
-        "chinese": zh_result if zh_result else {"translation": "未找到", "alternatives": []},
-        "english": en_result if en_result else {"translation": "Not found", "alternatives": []},
-    })
+    if has_chinese:
+        # Chinese → Spanish
+        es_result = _translate(word, "zh|es")
+        en_result = _translate(word, "zh|en")
+        return jsonify({
+            "success": True,
+            "word": word,
+            "direction": "zh→es",
+            "spanish": es_result if es_result else {"translation": "未找到", "alternatives": []},
+            "english": en_result if en_result else {"translation": "Not found", "alternatives": []},
+        })
+    else:
+        # Try Spanish → Chinese/English first
+        zh_result = _translate(word, "es|zh")
+        en_result = _translate(word, "es|en")
+
+        # If the translation looks like it just echoed back the same word,
+        # it's probably English input, try English → Spanish
+        zh_text = zh_result["translation"] if zh_result else ""
+        en_text = en_result["translation"] if en_result else ""
+
+        if en_text.lower().strip() == word.lower().strip() or zh_text.lower().strip() == word.lower().strip():
+            # Likely English input
+            es_result = _translate(word, "en|es")
+            zh_from_en = _translate(word, "en|zh")
+            return jsonify({
+                "success": True,
+                "word": word,
+                "direction": "en→es",
+                "spanish": es_result if es_result else {"translation": "No encontrado", "alternatives": []},
+                "chinese": zh_from_en if zh_from_en else {"translation": "未找到", "alternatives": []},
+            })
+
+        # Normal Spanish → Chinese/English
+        return jsonify({
+            "success": True,
+            "word": word,
+            "direction": "es→zh/en",
+            "chinese": zh_result if zh_result else {"translation": "未找到", "alternatives": []},
+            "english": en_result if en_result else {"translation": "Not found", "alternatives": []},
+        })
 
 
 # --- Verb Conjugation ---
