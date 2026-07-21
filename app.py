@@ -3,13 +3,14 @@ Spanish Learning App - 西语学习积累 📖
 """
 
 import os
+import io
 import sqlite3
 import unicodedata
 import urllib.request
 import urllib.parse
 import json
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 
 BASE_DIR = os.path.dirname(__file__)
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
@@ -258,6 +259,26 @@ def dictionary_lookup():
         "chinese": zh_result if zh_result else {"translation": "未找到", "alternatives": []},
         "english": en_result if en_result else {"translation": "Not found", "alternatives": []},
     })
+
+
+# --- Text-to-Speech ---
+
+@app.route("/api/tts", methods=["GET"])
+def text_to_speech():
+    """生成西语发音音频"""
+    text = request.args.get("text", "").strip()
+    if not text:
+        return jsonify({"success": False, "error": "缺少文本"}), 400
+
+    try:
+        from gtts import gTTS
+        tts = gTTS(text=text, lang='es', slow=False)
+        audio_buffer = io.BytesIO()
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+        return send_file(audio_buffer, mimetype='audio/mpeg', download_name='speech.mp3')
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 # --- Stats ---

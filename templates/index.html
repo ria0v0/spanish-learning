@@ -662,34 +662,12 @@ function escHtml(str) {
     return div.innerHTML;
 }
 
-// --- Text-to-Speech (Google Translate TTS) ---
+// --- Text-to-Speech (Server-side gTTS) ---
 function speak(text) {
     if (!text) return;
-    // Use Google Translate TTS - proper Spanish pronunciation
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=es&client=tw-ob&q=${encodeURIComponent(text)}`;
+    const url = `/api/tts?text=${encodeURIComponent(text)}`;
     const audio = new Audio(url);
-    audio.playbackRate = 0.9;
-    audio.play().catch(() => {
-        // Fallback to Web Speech API if Google TTS blocked
-        if ('speechSynthesis' in window) {
-            speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'es-ES';
-            utterance.rate = 0.85;
-            const voices = speechSynthesis.getVoices();
-            const esVoice = voices.find(v => v.lang === 'es-ES') || voices.find(v => v.lang.startsWith('es'));
-            if (esVoice) utterance.voice = esVoice;
-            speechSynthesis.speak(utterance);
-        } else {
-            showToast('语音播放失败');
-        }
-    });
-}
-
-// Preload voices as fallback
-if ('speechSynthesis' in window) {
-    speechSynthesis.getVoices();
-    speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+    audio.play().catch(() => showToast('语音播放失败'));
 }
 
 // --- Keyboard shortcut ---
