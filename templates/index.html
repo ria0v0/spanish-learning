@@ -497,7 +497,7 @@
 <!-- Dictionary Panel -->
 <div class="panel" id="panel-dict">
     <div class="search-bar">
-        <input type="text" id="dictInput" placeholder="输入西语单词或短语..." onkeydown="if(event.key==='Enter')lookupWord()">
+        <input type="text" id="dictInput" placeholder="西语/中文/英文 均可查询..." onkeydown="if(event.key==='Enter')lookupWord()">
         <button class="btn btn-primary btn-sm" onclick="lookupWord()" style="white-space:nowrap;">查询</button>
     </div>
     <div id="dictResult"></div>
@@ -864,12 +864,42 @@ async function lookupWord() {
             return;
         }
 
-        const zh = data.chinese;
-        const en = data.english;
+        let html = `<div class="dict-result">`;
+        html += `<div class="dict-word">${escHtml(data.word)} `;
 
-        container.innerHTML = `
-            <div class="dict-result">
-                <div class="dict-word">${escHtml(data.word)} <button onclick="speak('${data.word.replace(/'/g, "\\'")}')" style="background:none;border:none;cursor:pointer;font-size:0.8em;" title="朗读">🔊</button></div>
+        // Add speak button for Spanish results
+        if (data.direction === 'en→es' || data.direction === 'zh→es') {
+            const esWord = data.spanish ? data.spanish.translation : '';
+            html += `<button onclick="speak('${esWord.replace(/'/g, "\\'")}')" style="background:none;border:none;cursor:pointer;font-size:0.8em;" title="朗读西语">🔊</button>`;
+        } else {
+            html += `<button onclick="speak('${data.word.replace(/'/g, "\\'")}')" style="background:none;border:none;cursor:pointer;font-size:0.8em;" title="朗读">🔊</button>`;
+        }
+        html += `<span style="font-size:0.6em;color:var(--text-light);margin-left:6px;">${escHtml(data.direction)}</span></div>`;
+
+        if (data.direction === 'en→es' || data.direction === 'zh→es') {
+            // Reverse lookup: show Spanish translation
+            const es = data.spanish || {translation:'', alternatives:[]};
+            const secondary = data.direction === 'en→es' ? data.chinese : data.english;
+            html += `
+                <div class="dict-section">
+                    <div class="lang-label">🇪🇸 Español</div>
+                    <div class="main-translation">${escHtml(es.translation)}</div>
+                    ${es.alternatives.length ? `<div class="alternatives">También: ${es.alternatives.map(a => escHtml(a)).join(' / ')}</div>` : ''}
+                </div>`;
+            if (secondary) {
+                const label = data.direction === 'en→es' ? '🇨🇳 中文' : '🇬🇧 English';
+                html += `
+                <div class="dict-section">
+                    <div class="lang-label">${label}</div>
+                    <div class="main-translation">${escHtml(secondary.translation)}</div>
+                </div>`;
+            }
+            html += `<button class="btn btn-success dict-add-btn" onclick="addFromDict('${escHtml(es.translation)}', '${escHtml(data.word)}')">➕ 加入词库</button>`;
+        } else {
+            // Normal: Spanish → Chinese + English
+            const zh = data.chinese || {translation:'', alternatives:[]};
+            const en = data.english || {translation:'', alternatives:[]};
+            html += `
                 <div class="dict-section">
                     <div class="lang-label">🇨🇳 中文</div>
                     <div class="main-translation">${escHtml(zh.translation)}</div>
@@ -879,12 +909,12 @@ async function lookupWord() {
                     <div class="lang-label">🇬🇧 English</div>
                     <div class="main-translation">${escHtml(en.translation)}</div>
                     ${en.alternatives.length ? `<div class="alternatives">Also: ${en.alternatives.map(a => escHtml(a)).join(' / ')}</div>` : ''}
-                </div>
-                <button class="btn btn-success dict-add-btn" onclick="addFromDict('${escHtml(data.word)}', '${escHtml(zh.translation)}')">
-                    ➕ 加入词库
-                </button>
-            </div>
-        `;
+                </div>`;
+            html += `<button class="btn btn-success dict-add-btn" onclick="addFromDict('${escHtml(data.word)}', '${escHtml(zh.translation)}')">➕ 加入词库</button>`;
+        }
+
+        html += `</div>`;
+        container.innerHTML = html;
     } catch (e) {
         container.innerHTML = '<div class="empty">查询失败，请稍后重试</div>';
     }
