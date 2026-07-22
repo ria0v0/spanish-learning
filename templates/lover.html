@@ -418,7 +418,7 @@
 
         // 特殊女性绑定成员
         const specialFemaleMembers = [
-            { name: '雷晚萤', title: '美术馆主理人·争议女王', personality: '自信到让人窒息，永远活在自己的美学宇宙里', looks: '文艺名媛感，拍照永远找得到最好的光和角度', desc: '她在美术馆的白墙前给你讲当代艺术，你一个字没听懂但觉得她认真的样子好好看。"你不懂没关系，我讲给你听就好。"' }
+            { name: '雷晚萤', title: '美术馆主理人·争议女王', personality: '自信到让人窒息，永远活在自己的美学宇宙里', looks: '文艺名媛感，拍照永远找得到最好的光和角度', desc: '"很高兴你也喜欢艺术，并且有自己的见解。"她微微侧头看着你，嘴角带着一丝意味深长的笑。' }
         ];
 
         // TNT成员专属绑定：名字+原型一体，不会被打散
@@ -507,28 +507,23 @@
             const isMale = gender === 'male';
             let name, title, look, personality, desc;
 
-            // 男性有约20%概率抽到TNT成员（名字+原型绑定）
-            if (isMale && Math.random() < 0.2) {
-                const member = pick(tntMembers);
-                name = member.name;
-                title = member.title;
-                look = member.looks;
-                personality = member.personality;
-                desc = member.desc;
-            } else if (!isMale && Math.random() < 0.15) {
-                const member = pick(specialFemaleMembers);
-                name = member.name;
-                title = member.title;
-                look = member.looks;
-                personality = member.personality;
-                desc = member.desc;
+            // 男性：TNT成员混入普通原型池，概率均等
+            if (isMale) {
+                const allMale = [...maleArchetypes.map(a => ({...a, boundName: null})), ...tntMembers.map(m => ({title: m.title, personality: m.personality, looks: m.looks, desc: m.desc, boundName: m.name}))];
+                const chosen = pick(allMale);
+                name = chosen.boundName || pick(maleNames);
+                title = chosen.title;
+                look = chosen.looks;
+                personality = chosen.personality;
+                desc = chosen.desc;
             } else {
-                const archetype = pick(isMale ? maleArchetypes : femaleArchetypes);
-                name = pick(isMale ? maleNames : femaleNames);
-                title = archetype.title;
-                look = archetype.looks;
-                personality = archetype.personality;
-                desc = archetype.desc;
+                const allFemale = [...femaleArchetypes.map(a => ({...a, boundName: null})), ...specialFemaleMembers.map(m => ({title: m.title, personality: m.personality, looks: m.looks, desc: m.desc, boundName: m.name}))];
+                const chosen = pick(allFemale);
+                name = chosen.boundName || pick(femaleNames);
+                title = chosen.title;
+                look = chosen.looks;
+                personality = chosen.personality;
+                desc = chosen.desc;
             }
 
             const family = pick(families);
