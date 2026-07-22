@@ -65,6 +65,11 @@ def jimmy_spa():
     return render_template("spinner.html")
 
 
+@app.route("/ideas")
+def ideas():
+    return render_template("ideas.html")
+
+
 # --- CRUD API ---
 
 @app.route("/api/words", methods=["GET"])
