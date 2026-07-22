@@ -416,6 +416,11 @@
             { title: '皇室御用珠宝设计师', personality: '闷骚内敛，白天是女王晚上变奶猫', looks: '混血浓颜大美人，走到哪里都是焦点', desc: '她的作品被七国王室收藏，但她最珍贵的那枚戒指永远不卖——那是她按照你的手指尺寸偷偷打造的。' }
         ];
 
+        // 特殊女性绑定成员
+        const specialFemaleMembers = [
+            { name: '雷晚萤', title: '美术馆主理人·争议女王', personality: '自信到让人窒息，永远活在自己的美学宇宙里', looks: '文艺名媛感，拍照永远找得到最好的光和角度', desc: '她在美术馆的白墙前给你讲当代艺术，你一个字没听懂但觉得她认真的样子好好看。"你不懂没关系，我讲给你听就好。"' }
+        ];
+
         // TNT成员专属绑定：名字+原型一体，不会被打散
         const tntMembers = [
             { name: '马嘉祺', title: '音乐天才·团队灵魂', personality: '温柔如水的队长型人格，责任感爆棚但私下很幼稚', looks: '温润如玉，眉眼含笑像三月春风', desc: '他能在舞台上唱到所有人落泪，但下了台会因为一碗面纠结半小时。"你帮我选...我选择困难症又犯了。"' },
@@ -505,6 +510,13 @@
             // 男性有约20%概率抽到TNT成员（名字+原型绑定）
             if (isMale && Math.random() < 0.2) {
                 const member = pick(tntMembers);
+                name = member.name;
+                title = member.title;
+                look = member.looks;
+                personality = member.personality;
+                desc = member.desc;
+            } else if (!isMale && Math.random() < 0.15) {
+                const member = pick(specialFemaleMembers);
                 name = member.name;
                 title = member.title;
                 look = member.looks;
