@@ -60,6 +60,11 @@ def virtual_piano():
     return render_template("piano.html")
 
 
+@app.route("/jimmy-spa")
+def jimmy_spa():
+    return render_template("spinner.html")
+
+
 # --- CRUD API ---
 
 @app.route("/api/words", methods=["GET"])
@@ -353,8 +358,10 @@ def today_reading():
 
 @app.route("/api/reading/<int:index>", methods=["GET"])
 def get_reading(index):
-    """获取指定阅读"""
-    from daily_readings import get_reading_by_index
+    """获取指定阅读（支持环形浏览）"""
+    from daily_readings import get_reading_by_index, READINGS
+    # Wrap around
+    index = index % len(READINGS)
     reading = get_reading_by_index(index)
     if not reading:
         return jsonify({"success": False, "error": "未找到该阅读"})
