@@ -70,6 +70,11 @@ def ideas():
     return render_template("ideas.html")
 
 
+@app.route("/lover-generator")
+def lover_generator():
+    return render_template("lover.html")
+
+
 # --- CRUD API ---
 
 @app.route("/api/words", methods=["GET"])
