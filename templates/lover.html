@@ -186,9 +186,35 @@
         .btn-share { background: #00b894; color: white; }
 
         .hidden { display: none; }
+
+        .floating-hearts {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .heart {
+            position: absolute;
+            font-size: 20px;
+            animation: floatUp linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.4; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
     </style>
 </head>
 <body>
+    <div class="floating-hearts" id="hearts"></div>
     <div class="container">
         <h1>💘 你的命定恋人生成器</h1>
         <p class="subtitle">据说每个人冥冥之中都有一个命定之人... 来看看Ta是谁</p>
@@ -551,6 +577,25 @@
                 });
             }
         }
+
+        // Floating hearts background
+        const heartEmojis = ['💕', '💗', '💓', '💖', '💘', '💝', '♥️', '🩷'];
+        const heartsContainer = document.getElementById('hearts');
+        function createHeart() {
+            const heart = document.createElement('span');
+            heart.className = 'heart';
+            heart.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.fontSize = (12 + Math.random() * 18) + 'px';
+            heart.style.animationDuration = (6 + Math.random() * 8) + 's';
+            heart.style.animationDelay = Math.random() * 2 + 's';
+            heartsContainer.appendChild(heart);
+            setTimeout(() => heart.remove(), 16000);
+        }
+        // Create initial batch
+        for (let i = 0; i < 12; i++) setTimeout(createHeart, i * 500);
+        // Keep creating
+        setInterval(createHeart, 1200);
     </script>
 </body>
 </html>
