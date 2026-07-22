@@ -167,6 +167,12 @@
     <h1>🎹 你从未听过的神级音色</h1>
     <p class="subtitle">每个音调都对，但音色嘛...</p>
 
+    <!-- Mobile audio unlock overlay -->
+    <div id="audio-unlock" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,12,41,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+        <p style="font-size:1.5em;margin-bottom:20px;">🎹 你从未听过的神级音色</p>
+        <button id="unlock-btn" style="padding:18px 40px;font-size:1.1em;border:none;border-radius:25px;background:linear-gradient(135deg,#f093fb,#f5576c);color:white;cursor:pointer;">🔊 点击开始演奏</button>
+    </div>
+
     <div class="timbre-selector" id="timbre-selector"></div>
     <div class="current-timbre-display">当前音色：<span id="current-timbre-name"></span></div>
 
@@ -196,6 +202,22 @@
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
+        }
+
+        // Unlock audio on mobile with explicit user tap
+        document.getElementById('unlock-btn').addEventListener('touchend', unlockAudio);
+        document.getElementById('unlock-btn').addEventListener('click', unlockAudio);
+
+        function unlockAudio() {
+            initAudio();
+            // Play a silent buffer to fully unlock on iOS
+            const buffer = audioCtx.createBuffer(1, 1, 22050);
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioCtx.destination);
+            source.start(0);
+            // Hide overlay
+            document.getElementById('audio-unlock').style.display = 'none';
         }
 
         // Timbres - each creates a unique weird sound at the correct frequency
